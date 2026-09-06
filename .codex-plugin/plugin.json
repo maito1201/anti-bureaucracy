@@ -1,0 +1,16 @@
+{
+  "name": "anti-bureaucracy",
+  "version": "0.1.0",
+  "description": "作る前に、何を作るかを疑わせる。アウトカムを人間と確定するまで作り始めない振る舞いを、SessionStart と SubagentStart の hook で毎回注入する",
+  "author": { "name": "maito1201" },
+  "repository": "https://github.com/maito1201/anti-bureaucracy",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "anti-bureaucracy",
+    "shortDescription": "作る前に何を作るかを疑わせる",
+    "developerName": "maito1201",
+    "category": "Productivity",
+    "capabilities": ["Instructions", "Lifecycle hooks"]
+  }
+}

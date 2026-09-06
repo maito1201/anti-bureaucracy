@@ -24,6 +24,15 @@ Claude Code を起動し直すと、SessionStart（startup / resume / clear / co
 
 止める: 環境変数 `ANTI_BUREAUCRACY=off`（settings.json の `env`、またはシェル）。hook は何も出さなくなる。plugin ごと外すなら `claude plugin disable anti-bureaucracy@anti-bureaucracy`（autopoiesys が依存している間は外せない）。
 
+Codex CLI でも同じリポジトリから入る（`.codex-plugin/plugin.json` と `.agents/plugins/marketplace.json` を同梱）。
+
+```bash
+codex plugin marketplace add maito1201/anti-bureaucracy
+codex plugin add anti-bureaucracy@anti-bureaucracy
+```
+
+Codex は plugin の hook を信頼するまで動かさない。`codex` を起動して `/hooks` を開き、anti-bureaucracy の2つの hook を信頼してから新しいスレッドを始める。スキルは `$anti-bureaucracy:anti-bureaucracy` で呼ぶ。
+
 plugin が使えない環境では、SKILL.md の frontmatter を除いた本文を CLAUDE.md か AGENTS.md に貼る。hook と off スイッチは付かないが、要求は同じ。
 
 ## autopoiesys と一緒に使う
