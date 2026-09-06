@@ -1,0 +1,19 @@
+{
+  "name": "anti-bureaucracy",
+  "owner": {
+    "name": "maito1201"
+  },
+  "metadata": {
+    "description": "作る前に、何を作るかを疑わせる。アウトカムを人間と確定するまで作り始めない振る舞いを、毎セッション注入する plugin"
+  },
+  "plugins": [
+    {
+      "name": "anti-bureaucracy",
+      "description": "要求を受けた直後に「アウトカム・未知・埋め方・確認」を、作った後に「字義との差分・形式との差分・反証」を書かせる60行の要求。SessionStart と SubagentStart の hook で毎回届く。明示的に通すなら /anti-bureaucracy:anti-bureaucracy",
+      "source": "./",
+      "skills": [
+        "./skills/anti-bureaucracy"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Claude Code CLI
+        run: curl -fsSL https://claude.ai/install.sh | bash
+
+      - name: Add Claude Code to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Validate plugin marketplace
+        run: claude plugin validate --strict .
+
+      - name: Check declared skill paths exist
+        run: |
+          jq -r '.plugins[].skills[]' .claude-plugin/marketplace.json | while read -r p; do
+            test -d "$p" || { echo "skills に宣言されたパスが無い: $p" >&2; exit 1; }
+          done
+
+      - name: SKILL.md は60行以内
+        run: |
+          n=$(wc -l < skills/anti-bureaucracy/SKILL.md)
+          test "$n" -le 60 || { echo "SKILL.md が60行を超えた: $n 行（足すなら消す）" >&2; exit 1; }
+
+      - name: hook の出力が JSON で、本文をそのまま含む
+        run: |
+          bash hooks/inject.sh | jq -e '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | contains("## 官僚主義の定義") and contains("60行を超えない"))'
+          bash hooks/inject.sh subagent | jq -e '.hookSpecificOutput.hookEventName == "SubagentStart" and (.hookSpecificOutput.additionalContext | contains("サブエージェント"))'
+          test -z "$(ANTI_BUREAUCRACY=off bash hooks/inject.sh)"

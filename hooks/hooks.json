@@ -1,0 +1,28 @@
+{
+  "description": "anti-bureaucracy の要求（skills/anti-bureaucracy/SKILL.md の本文）を、セッション冒頭と各サブエージェントに注入する",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/inject.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/inject.sh\" subagent",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
