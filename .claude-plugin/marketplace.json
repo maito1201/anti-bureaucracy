@@ -12,7 +12,9 @@
       "description": "要求を受けた直後に「アウトカム・未知・埋め方・確認」を、作った後に「字義との差分・形式との差分・反証」を書かせる60行の要求。SessionStart と SubagentStart の hook で毎回届く。明示的に通すなら /anti-bureaucracy:anti-bureaucracy",
       "source": "./",
       "skills": [
-        "./skills/anti-bureaucracy"
+        "./skills/anti-bureaucracy",
+        "./skills/review-outcome",
+        "./skills/thorough-task"
       ]
     }
   ]

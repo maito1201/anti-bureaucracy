@@ -28,14 +28,41 @@ jobs:
 
       - name: SKILL.md は60行以内
         run: |
-          n=$(wc -l < skills/anti-bureaucracy/SKILL.md)
-          test "$n" -le 60 || { echo "SKILL.md が60行を超えた: $n 行（足すなら消す）" >&2; exit 1; }
+          for skill in skills/*/SKILL.md; do
+            n=$(wc -l < "$skill")
+            test "$n" -le 60 || { echo "$skill が60行を超えた: $n 行（足すなら消す）" >&2; exit 1; }
+          done
 
       - name: hook の出力が JSON で、本文をそのまま含む
         run: |
           bash hooks/inject.sh | jq -e '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | contains("## 官僚主義の定義") and contains("60行を超えない"))'
           bash hooks/inject.sh subagent | jq -e '.hookSpecificOutput.hookEventName == "SubagentStart" and (.hookSpecificOutput.additionalContext | contains("サブエージェント"))'
           test -z "$(ANTI_BUREAUCRACY=off bash hooks/inject.sh)"
+
+      - name: 節目のスキルが配布され、注入本文から辿れる
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re, subprocess
+          root = pathlib.Path.cwd()
+          skill = root / 'skills/anti-bureaucracy/SKILL.md'
+          body = skill.read_text().split('---', 2)[2].strip('\n')
+          output = json.loads(subprocess.check_output(['bash', 'hooks/inject.sh']))
+          assert output['hookSpecificOutput']['additionalContext'].strip('\n') == body
+          declared = json.loads((root / '.claude-plugin/marketplace.json').read_text())['plugins'][0]['skills']
+          codex = json.loads((root / '.codex-plugin/plugin.json').read_text())['skills']
+          for source in (root / 'skills').glob('*/SKILL.md'):
+              for link in re.findall(r'\]\(([^)]+/SKILL\.md)\)', source.read_text()):
+                  target = (source.parent / link).resolve()
+                  assert target.is_file(), target
+                  assert target.parent in [(root / p).resolve() for p in declared], target
+                  assert target.is_relative_to((root / codex).resolve()), target
+          for name in ('thorough-task', 'review-outcome'):
+              folder = root / 'skills' / name
+              assert (folder / 'agents/openai.yaml').read_text().strip() == 'policy:\n  allow_implicit_invocation: false'
+          PY
+
+      - name: Shell syntax
+        run: bash -n hooks/inject.sh
 
       - name: Codex 用 manifest が JSON として読める
         run: |
