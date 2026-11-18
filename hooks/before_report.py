@@ -23,6 +23,13 @@ NEG = re.compile(r'ません|ていない|できない|未確認|未達|ただ�
                  r"\bnot\b|n't\b|\bhowever\b|\bbarely\b|\bunverified\b|\blimit", re.I)
 
 
+# 否定形で書かれているが、確かめた結果を述べている行（自分で置いた目印）。「入っていない事を確かめました」「行は残っていません」
+# 「エラーはありません」を、できていない事として並べてしまったため（2026-11-19 に実際のセッションで観測）
+FOUND = re.compile(r'(ない|ません)\s*(事|こと)[をはも]?[^。]{0,12}(確かめ|確認)|'
+                   r'(残って|入って|含まれて|出て|起きて|壊れて|落ちて|触って|触れて)は?(いません|いない)|'
+                   r'(エラー|問題|不具合|該当|差分|食い違い)[^。]{0,15}(ありません|無い|ない|出ていません)')
+
+
 def text_of(c):
     if isinstance(c, list): c = '\n'.join(x.get('text', '') for x in c if isinstance(x, dict) and x.get('type') == 'text')
     return (c or '').strip()
@@ -91,10 +98,11 @@ def build(rows, seen=(), report=''):
     rest = [x for x in said[1:] if len(x[1]) >= MIN_LEN] or said[1:]      # 短い叱責だけの発話より、中身のある発話を優先する
     pick = said[:1] + rest[-(MAX_REQ - 1):]        # 最初の依頼と、直近の発話
     req = '\n'.join(f'・（{d}）{t[:MAX_EACH]}{"…" if len(t) > MAX_EACH else ""}' for d, t in pick)
-    neg = [s[:200] for s in sentences(report) if NEG.search(s)][:MAX_LINES]
+    neg = [s[:200] for s in sentences(report) if NEG.search(s) and not FOUND.search(s)][:MAX_LINES]
     out = [f'{MARK}この報告を受け取るのは、次の言葉を書いた本人。記録からそのまま写した（最初の依頼と、直近の発話）。', req, '']
     if neg:
-        out += ['いまの報告が、自分で「できていない・確かめていない」と書いた行:', '\n'.join('・' + s for s in neg), '']
+        out += ['いまの報告のうち、否定や留保を書いた行（言い回しで機械的に抜いた。できていない事か、確かめた結果かは自分で見分ける）:',
+                '\n'.join('・' + s for s in neg), '']
     out += ['本人の席に座って、この報告と成果物だけを受け取ったとして答える。依頼の言葉どおりの事が、これでいまできるか。',
             'できないなら未完。直すのは成果物の側で、依頼の条件の内側で届くまで作る。依頼と違う物に替わっているなら、依頼の物に戻す。',
             '報告の文は直す対象ではない。できていない事を書いた行は消さず、言い換えず、確信の度合いも上げない。文を変えても成果物は変わらない。',
