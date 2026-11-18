@@ -35,9 +35,15 @@ jobs:
 
       - name: hook の出力が JSON で、本文をそのまま含む
         run: |
-          bash hooks/inject.sh | jq -e '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | contains("## 官僚主義の定義") and contains("60行を超えない"))'
+          bash hooks/inject.sh | jq -e '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | contains("## 仕事の始め") and contains("## 終える時"))'
           bash hooks/inject.sh subagent | jq -e '.hookSpecificOutput.hookEventName == "SubagentStart" and (.hookSpecificOutput.additionalContext | contains("サブエージェント"))'
           test -z "$(ANTI_BUREAUCRACY=off bash hooks/inject.sh)"
+
+      - name: 報告の前の hook は、記録が無い時に何も出さずに終わる
+        run: |
+          python3 -m py_compile hooks/before_report.py
+          test -z "$(echo '{}' | python3 hooks/before_report.py)"
+          test -z "$(echo '{"transcript_path":"/nonexistent"}' | python3 hooks/before_report.py)"
 
       - name: 節目のスキルが配布され、注入本文から辿れる
         run: |
